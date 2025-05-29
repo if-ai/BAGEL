@@ -8,6 +8,8 @@ from typing import Dict, Tuple, Optional, Any, Union
 from PIL import Image
 from folder_paths import folder_names_and_paths
 import comfy.utils # For progress bar
+import bitsandbytes as bnb
+from torch import nn
 
 # Add current directory to path
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -190,6 +192,19 @@ def tensor_to_pil(tensor: torch.Tensor) -> Image.Image:
     return Image.fromarray(img_array)
 
 
+def quantize_linear_layer(layer: nn.Linear):
+    ql = bnb.nn.Linear8bitLt(
+        layer.in_features,
+        layer.out_features,
+        bias=layer.bias is not None,
+        has_fp16_weights=True   # weights kept fp16 in memory, multiplied in int8
+    )
+    ql.weight.data = layer.weight.data  # copy weights
+    if layer.bias is not None:
+        ql.bias.data = layer.bias.data
+    return ql
+
+
 class BagelModelLoader:
     """BAGEL Model Loader Node"""
 
@@ -250,7 +265,15 @@ class BagelModelLoader:
                 pbar.update_absolute(current_step, 10, description if description else None)
 
             base_model_dir = os.path.join(os.getcwd(), "models", "bagel")
-            local_model_dir = os.path.join(base_model_dir, "BAGEL-7B-MoT")
+            # Determine local directory based on provided model_path (repo id or local path)
+            # If model_path is an absolute/local path that exists, use it directly.
+            if os.path.isabs(model_path) and os.path.exists(model_path):
+                local_model_dir = model_path
+            else:
+                # Otherwise, treat model_path as a HuggingFace repo id and derive directory name from it
+                repo_name = model_path.split("/")[-1]
+                local_model_dir = os.path.join(base_model_dir, repo_name)
+            
             update_pbar(description="Checking local files...")
 
             if not os.path.exists(local_model_dir) or not check_model_files(local_model_dir, precision):
@@ -333,12 +356,12 @@ class BagelModelLoader:
 
             if precision.startswith("fp8"):
                 checkpoint_to_load = "ema-FP8.safetensors"
-                torch_dtype_for_load = torch.float8_e4m3fn # Load as FP8
-                print(f"Using FP8 checkpoint: {checkpoint_to_load}. Weights will be loaded as {torch_dtype_for_load}.")
+                torch_dtype_for_load = torch.bfloat16 # Reverted: Load FP8 weights as bfloat16 for stability
+                print(f"Using FP8 checkpoint: {checkpoint_to_load}. Weights will be loaded as {torch_dtype_for_load} (FP8 on disk).")
             elif precision == "int8":
                 checkpoint_to_load = "model_int8.safetensors"
-                torch_dtype_for_load = torch.int8 # Load as INT8
-                print(f"Using INT8 checkpoint: {checkpoint_to_load}. Weights will be loaded as {torch_dtype_for_load}.")
+                torch_dtype_for_load = torch.bfloat16 # Reverted: Load INT8 weights as bfloat16 for stability
+                print(f"Using INT8 checkpoint: {checkpoint_to_load}. Weights will be loaded as {torch_dtype_for_load} (INT8 on disk).")
             else: # bfloat16
                  print(f"Using bfloat16 checkpoint: {checkpoint_to_load}. Weights will be loaded as {torch_dtype_for_load}.")
             
