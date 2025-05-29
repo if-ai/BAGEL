@@ -20,9 +20,11 @@ BAGEL is an open-source multimodal foundation model with 7B active parameters (1
 ## Installation
 
 ### 1. Download Model
-The BAGEL-7B-MoT model will be automatically downloaded to `models/bagel/BAGEL-7B-MoT/` when first used. You can also manually download it.
+All BAGEL model variants (bfloat16, FP8, INT8) use the same base directory and share configuration files. Only the weight files differ between precisions.
 
-**Original BAGEL-7B-MoT (bfloat16):**
+**Base Model Setup:**
+The main model will be automatically downloaded to `models/bagel/BAGEL-7B-MoT/` when first used. You can also manually download it:
+
 ```bash
 # Clone model using git lfs (recommended)
 git lfs install
@@ -33,27 +35,55 @@ pip install huggingface_hub
 python -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='ByteDance-Seed/BAGEL-7B-MoT', local_dir='models/bagel/BAGEL-7B-MoT')"
 ```
 
-**INT8 GGUF Model (For GGUF-specific loaders):**
-Download the `ggml-bytedance-BAGEL-7B-MoT-f16-IQ4_XS.gguf` file (or other desired GGUF variant) from [Gapeleon/bytedance_BAGEL-7B-MoT-INT8](https://huggingface.co/Gapeleon/bytedance_BAGEL-7B-MoT-INT8/tree/main) and place it in a dedicated GGUF model directory (e.g., `models/gguf/`).
-*(Note: These ComfyUI-BAGEL nodes currently load `.safetensors` based models. For GGUF, use a GGUF-compatible loader node.)*
+**Additional Precision Weight Files:**
+To use different precisions, download the specific weight files and place them in the same `models/bagel/BAGEL-7B-MoT/` directory:
 
-**INT8 Safetensors Model (For these ComfyUI-BAGEL nodes):**
-If you wish to use an INT8 quantized model in `.safetensors` format with *these* nodes, download `model_int8.safetensors` and other necessary files (like `config.json`, `llm_config.json`, `vit_config.json`, `ae.safetensors`, `special_tokens_map.json`, `tokenizer_config.json`, `vocab.json`) from a repository like [Gapeleon/bytedance_BAGEL-7B-MoT-INT8](https://huggingface.co/Gapeleon/bytedance_BAGEL-7B-MoT-INT8/tree/main). Place these files into a directory such as `models/bagel/BAGEL-7B-MoT-INT8/`. The loader will expect `model_int8.safetensors` as the main weights file when "int8" precision is selected.
+**FP8 Weights:**
+Download `ema-FP8.safetensors` from [meimeilook/BAGEL-7B-MoT-FP8](https://huggingface.co/meimeilook/BAGEL-7B-MoT-FP8/tree/main) and place it in `models/bagel/BAGEL-7B-MoT/`.
 
-**FP8 Model (Experimental, `.safetensors` based):**
-The FP8 version can be found at [meimeilook/BAGEL-7B-MoT-FP8](https://huggingface.co/meimeilook/BAGEL-7B-MoT-FP8/tree/main).
-Download and place it in `models/bagel/BAGEL-7B-MoT-FP8/`.
-*(Note: This FP8 model is not yet fully compatible with the current nodes. Use with caution.)*
+**INT8 Weights:**
+Download `model_int8.safetensors` from [Gapeleon/bytedance_BAGEL-7B-MoT-INT8](https://huggingface.co/Gapeleon/bytedance_BAGEL-7B-MoT-INT8/tree/main) and place it in `models/bagel/BAGEL-7B-MoT/`.
 
-The expected directory structure for models is:
+**Required Files Structure:**
+All precision variants require these shared files in `models/bagel/BAGEL-7B-MoT/`:
+
+**Essential Configuration Files:**
+- `llm_config.json` - Language model configuration
+- `vit_config.json` - Vision transformer configuration  
+- `ae.safetensors` - VAE autoencoder weights
+- `config.json` - General model configuration
+- `generation_config.json` - Generation parameters
+- `tokenizer_config.json` - Tokenizer configuration
+- `vocab.json` - Vocabulary file
+- `merges.txt` - BPE merges file
+
+**Precision-Specific Weight Files (at least one required):**
+- `ema.safetensors` - **bfloat16** precision weights (default)
+- `ema-FP8.safetensors` - **FP8** precision weights (for fp8_e4m3fn)
+- `model_int8.safetensors` - **INT8** precision weights (for int8)
+
+**GGUF Models (Separate Usage):**
+GGUF models (like `ggml-bytedance-BAGEL-7B-MoT-f16-IQ4_XS.gguf`) are used with different loader nodes and should be placed in a separate directory (e.g., `models/gguf/`). These nodes do not directly support GGUF format.
+
+**Final Directory Structure:**
 ```
 ComfyUI/
 ├── models/
 │   ├── bagel/
-│   │   ├── BAGEL-7B-MoT/ (for the original bfloat16 model)
-│   │   ├── BAGEL-7B-MoT-INT8/ (for INT8 .safetensors model, e.g., model_int8.safetensors)
-│   │   └── BAGEL-7B-MoT-FP8/ (for FP8 .safetensors models)
-│   ├── gguf/ (example directory for GGUF models)
+│   │   └── BAGEL-7B-MoT/                    # Single directory for all precisions
+│   │       ├── llm_config.json              # Shared config files
+│   │       ├── vit_config.json              # (required for all precisions)
+│   │       ├── ae.safetensors               #
+│   │       ├── config.json                  #
+│   │       ├── generation_config.json       #
+│   │       ├── tokenizer_config.json        #
+│   │       ├── vocab.json                   #
+│   │       ├── merges.txt                   #
+│   │       ├── ema.safetensors              # bfloat16 weights
+│   │       ├── ema-FP8.safetensors          # FP8 weights (optional)
+│   │       └── model_int8.safetensors       # INT8 weights (optional)
+│   └── gguf/                                # For GGUF models (separate loaders)
+│       └── ggml-bytedance-BAGEL-7B-MoT-f16-IQ4_XS.gguf
 ```
 
 ### 2. Install Dependencies
@@ -125,28 +155,42 @@ Contributions are welcome! Please submit issue reports and feature requests. If 
 ## FAQ
 
 ### 1. VRAM Requirements
-VRAM requirements vary significantly based on the model version and precision:
-- **Original BAGEL-7B-MoT (bfloat16, `.safetensors`)**: The official recommendation for generating a 1024×1024 image is over 80GB GPU memory.
+VRAM requirements vary significantly based on the model precision you select in the BAGEL Model Loader:
+
+- **Original BAGEL-7B-MoT (bfloat16, `ema.safetensors`)**: The official recommendation for generating a 1024×1024 image is over 80GB GPU memory.
   - **Single GPU**: A100 (40GB) takes approximately 340-380 seconds per image.
   - **Multi-GPU**: 3 RTX3090 GPUs (24GB each) complete the task in about 1 minute.
-- **Compressed Model (DFloat11, `.safetensors`)**: Using the DFloat11 version requires only 22GB VRAM and can run on a single 24GB GPU, with peak memory usage around 21.76GB (A100) and generation time of approximately 58 seconds. (This refers to a specific version, check model card for details).
-- **FP8 Model (`.safetensors`)**: The [BAGEL-7B-MoT-FP8 model by meimeilook](https://huggingface.co/meimeilook/BAGEL-7B-MoT-FP8/tree/main) aims to reduce VRAM further. This is loaded by selecting "fp8..." precision in the BAGEL Model Loader node. *Note: Currently not fully compatible with these nodes.*
-- **INT8 Safetensors Model (`model_int8.safetensors`)**: The [BAGEL-7B-MoT-INT8 by Gapeleon](https://huggingface.co/Gapeleon/bytedance_BAGEL-7B-MoT-INT8/tree/main) also provides `model_int8.safetensors`. This can be loaded by selecting "int8" precision in the BAGEL Model Loader node. It offers reduced VRAM compared to bfloat16.
+- **Compressed Model (DFloat11, bfloat16)**: Using the DFloat11 version requires only 22GB VRAM and can run on a single 24GB GPU, with peak memory usage around 21.76GB (A100) and generation time of approximately 58 seconds. (This refers to a specific version, check model card for details).
+- **FP8 Model (`ema-FP8.safetensors`)**: The [BAGEL-7B-MoT-FP8 model by meimeilook](https://huggingface.co/meimeilook/BAGEL-7B-MoT-FP8/tree/main) aims to reduce VRAM further. Select "fp8_e4m3fn" precision in the BAGEL Model Loader to use this variant. Place the `ema-FP8.safetensors` file in your main `models/bagel/BAGEL-7B-MoT/` directory.
+- **INT8 Safetensors Model (`model_int8.safetensors`)**: The [BAGEL-7B-MoT-INT8 by Gapeleon](https://huggingface.co/Gapeleon/bytedance_BAGEL-7B-MoT-INT8/tree/main) provides `model_int8.safetensors`. Select "int8" precision in the BAGEL Model Loader to use this variant. Place the `model_int8.safetensors` file in your main `models/bagel/BAGEL-7B-MoT/` directory. It offers reduced VRAM compared to bfloat16.
 - **INT8 GGUF Model**: The GGUF version from the same repository offers significant VRAM reduction and is designed for broader hardware compatibility (e.g., CPU inference, different GPU architectures) when used with a GGUF-specific loader. *Note: These ComfyUI-BAGEL nodes do not directly load GGUF files; use a separate GGUF loader node for those.*
 
 For more details on the original model's VRAM, visit the [GitHub issue](https://github.com/ByteDance-Seed/Bagel/issues/4).
 
-### 2. Quantized Versions (FP8, INT8)
-- **FP8 (`.safetensors`)**: An FP8 version ([meimeilook/BAGEL-7B-MoT-FP8](https://huggingface.co/meimeilook/BAGEL-7B-MoT-FP8/tree/main)) is available. Select the "fp8..." precision in the BAGEL Model Loader. It is not yet fully compatible with these custom nodes.
-- **INT8 (`.safetensors`)**: An INT8 version is available, for example, `model_int8.safetensors` from [Gapeleon/bytedance_BAGEL-7B-MoT-INT8](https://huggingface.co/Gapeleon/bytedance_BAGEL-7B-MoT-INT8/tree/main). Select the "int8" precision in the BAGEL Model Loader for these files.
-- **INT8 (GGUF)**: A GGUF version from the same Gapeleon repository is also available. This format is recommended for users seeking the lowest VRAM and widest compatibility (including CPU) but requires a GGUF-specific loader node, not the ones provided in this package.
+### 2. Model File Organization
+All precision variants of BAGEL use the **same directory** (`models/bagel/BAGEL-7B-MoT/`) and share configuration files:
 
-### 3. Flash Attention
+- **Shared Files**: Configuration files (`llm_config.json`, `vit_config.json`, `ae.safetensors`, etc.) are identical across all precisions
+- **Precision-Specific Files**: Only the weight files differ:
+  - `ema.safetensors` for bfloat16 (default)
+  - `ema-FP8.safetensors` for FP8
+  - `model_int8.safetensors` for INT8
+- **GGUF Separation**: GGUF models use a completely different format and should be placed in a separate directory (e.g., `models/gguf/`) for use with GGUF-compatible loaders.
+
+### 3. Precision Selection
+In the BAGEL Model Loader node:
+- Select **"bfloat16"** to use `ema.safetensors` (default, highest quality)
+- Select **"fp8_e4m3fn"** to use `ema-FP8.safetensors` (reduced VRAM)
+- Select **"int8"** to use `model_int8.safetensors` (further reduced VRAM)
+
+The loader will automatically look for the appropriate weight file in the same directory.
+
+### 4. Flash Attention
 Flash Attention is recommended for faster inference, especially on compatible NVIDIA GPUs. See the "Flash Attention Installation" section for setup instructions. Remember to match Python, CUDA, and PyTorch versions.
 
-### 4. NameError: 'Qwen2Config' is not defined
+### 5. NameError: 'Qwen2Config' is not defined
 This issue is likely related to environment or dependency problems, or an incorrect installation of the BAGEL model components. Ensure all dependencies from `requirements.txt` are installed and the model files are correctly placed. For more information, refer to [this GitHub issue](https://github.com/neverbiasu/ComfyUI-BAGEL/issues/7).
 
-### 5. Future GGUF Support
+### 6. Future GGUF Support
 Support for GGUF model versions (like the INT8 GGUF) is planned for a future update to these custom nodes. This will allow for easier use of quantized models with potentially lower VRAM requirements.
 *Correction: While GGUF is a popular format, these BAGEL nodes are primarily focused on the `.safetensors` based model structure. For GGUF, please use dedicated GGUF loader nodes available in the ComfyUI ecosystem.*

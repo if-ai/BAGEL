@@ -240,12 +240,11 @@ class BagelModelLoader:
             Dictionary containing all model components
         """
         try:
-            # Define base model directory
+            # Define base model directory - always use the same directory regardless of precision
             base_model_dir = os.path.join(os.getcwd(), "models", "bagel")
 
-            # Extract repo name from model_path for the subdirectory
-            repo_name = model_path.split("/")[-1] if "/" in model_path else model_path
-            local_model_dir = os.path.join(base_model_dir, repo_name)
+            # Always use the main model directory name, regardless of precision
+            local_model_dir = os.path.join(base_model_dir, "BAGEL-7B-MoT")
 
             # Check if model exists locally, if not, download it
             if not os.path.exists(local_model_dir) or not check_model_files(local_model_dir, precision):
