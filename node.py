@@ -140,12 +140,13 @@ def download_model_with_hf_hub(
         return None
 
 
-def check_model_files(model_path: str) -> bool:
+def check_model_files(model_path: str, precision: str = "bfloat16") -> bool:
     """
-    Check if all required model files exist
+    Check if all required model files exist for the given precision.
 
     Args:
         model_path: Path to the model directory
+        precision: The precision string (e.g., "bfloat16", "fp8_e4m3fn")
 
     Returns:
         True if all files exist, False otherwise
@@ -154,11 +155,16 @@ def check_model_files(model_path: str) -> bool:
         "llm_config.json",
         "vit_config.json",
         "ae.safetensors",
-        "ema.safetensors",
     ]
+    expected_ema_file = "ema.safetensors"
+    if precision.startswith("fp8"):
+        expected_ema_file = "ema-FP8.safetensors"
+    
+    required_files.append(expected_ema_file)
 
-    for file in required_files:
-        if not os.path.exists(os.path.join(model_path, file)):
+    for file_name in required_files:
+        if not os.path.exists(os.path.join(model_path, file_name)):
+            print(f"Error: Missing required file for precision '{precision}': {file_name} in {model_path}")
             return False
     return True
 
@@ -192,8 +198,12 @@ class BagelModelLoader:
                     "STRING",
                     {
                         "default": "ByteDance-Seed/BAGEL-7B-MoT",
-                        "tooltip": "Hugging Face model repo name or local path",
+                        "tooltip": "Hugging Face model repo ID or local path. For FP8 models, ensure this path points to the FP8 version (e.g., 'meimeilook/BAGEL-7B-MoT-FP8') and select the corresponding FP8 precision.",
                     },
+                ),
+                "precision": (
+                    ["bfloat16", "fp8_e4m3fn", "fp8_e5m2 (coming soon)"],
+                    {"default": "bfloat16", "tooltip": "Model precision. Select fp8 for FP8 quantized models (weights stored as FP8, used as bfloat16)."},
                 ),
             }
         }
@@ -204,19 +214,23 @@ class BagelModelLoader:
     CATEGORY = "BAGEL/Core"
 
     @classmethod
-    def VALIDATE_INPUTS(cls, model_path):
+    def VALIDATE_INPUTS(cls, model_path, precision):
         """Validate input parameters"""
         if not isinstance(model_path, str) or not model_path.strip():
             return "Model path must be a non-empty string"
-
+        if precision not in ["bfloat16", "fp8_e4m3fn", "fp8_e5m2 (coming soon)"]:
+            return "Invalid precision selected."
+        if precision == "fp8_e5m2 (coming soon)":
+            print("Note: fp8_e5m2 precision is marked as 'coming soon' and is experimental.")
         return True
 
-    def load_model(self, model_path: str) -> Tuple[Dict[str, Any]]:
+    def load_model(self, model_path: str, precision: str) -> Tuple[Dict[str, Any]]:
         """
         Load BAGEL model and its components. Automatically download the model if not found.
 
         Args:
-            model_path: URL to the Hugging Face model repository
+            model_path: URL to the Hugging Face model repository or local path
+            precision: The precision to load the model with ("bfloat16", "fp8_e4m3fn", "fp8_e5m2 (coming soon)")
 
         Returns:
             Dictionary containing all model components
@@ -230,30 +244,28 @@ class BagelModelLoader:
             local_model_dir = os.path.join(base_model_dir, repo_name)
 
             # Check if model exists locally, if not, download it
-            if not os.path.exists(local_model_dir) or not check_model_files(
-                local_model_dir
-            ):
+            if not os.path.exists(local_model_dir) or not check_model_files(local_model_dir, precision):
                 print(
-                    f"Model not found locally. Attempting to download from {model_path}..."
+                    f"Model not found locally or missing files for precision '{precision}'. Attempting to download from {model_path}..."
                 )
-
-                # Attempt to download using huggingface_hub
                 downloaded_path = download_model_with_hf_hub(
                     local_model_dir, repo_id=model_path
                 )
                 if not downloaded_path:
                     raise FileNotFoundError(
-                        f"Failed to download BAGEL model. Please manually download it from "
-                        f"{model_path} and place it in {local_model_dir}"
+                        f"Failed to download BAGEL model from {model_path}. "
+                        f"Please manually download it and place it in {local_model_dir}"
                     )
-
                 print(f"Successfully downloaded BAGEL model to {local_model_dir}")
 
-            # Final check that all required files exist
-            if not check_model_files(local_model_dir):
+            # Final check that all required files exist for the specified precision
+            if not check_model_files(local_model_dir, precision):
                 raise FileNotFoundError(
-                    f"Required model files missing in {local_model_dir}"
+                    f"Required model files missing in {local_model_dir} for precision '{precision}'. "
+                    f"Please ensure the correct model version and all its files are present."
                 )
+            
+            print(f"Loading model with precision: {precision}")
 
             # Load configuration files
             llm_config = Qwen2Config.from_json_file(
@@ -302,13 +314,28 @@ class BagelModelLoader:
             # Create transformers
             vae_transform = ImageTransform(1024, 512, 16)
             vit_transform = ImageTransform(980, 224, 14)
+            
+            # Determine checkpoint file and dtype for loading
+            checkpoint_to_load = "ema.safetensors"
+            torch_dtype_for_load = torch.bfloat16 # Default, also for FP8 files as per Gradio app
+
+            if precision.startswith("fp8"):
+                checkpoint_to_load = "ema-FP8.safetensors"
+                # dtype remains bfloat16 to mimic app (FP8 for storage, bfloat16 for compute)
+                print(f"Using FP8 checkpoint: {checkpoint_to_load}. Weights will be loaded as bfloat16.")
+            
+            full_checkpoint_path = os.path.join(local_model_dir, checkpoint_to_load)
+
+            if not os.path.exists(full_checkpoint_path):
+                # This should ideally be caught by check_model_files earlier
+                raise FileNotFoundError(f"Checkpoint file {full_checkpoint_path} not found for precision {precision}.")
 
             # Load model weights
             model = load_checkpoint_and_dispatch(
                 model,
-                checkpoint=os.path.join(local_model_dir, "ema.safetensors"),
+                checkpoint=full_checkpoint_path,
                 device_map="auto",
-                dtype=torch.bfloat16,
+                dtype=torch_dtype_for_load,
                 force_hooks=True,
             ).eval()
 
@@ -454,9 +481,22 @@ class BagelTextToImage:
         cls, model, prompt, seed, image_ratio, cfg_text_scale, num_timesteps, **kwargs
     ):
         """Validate input parameters"""
-        if not isinstance(prompt, str) or not prompt.strip():
-            return "Prompt must be a non-empty string"
+        # Validate prompt
+        actual_prompt = prompt
+        if isinstance(prompt, (list, tuple)):
+            if len(prompt) == 1 and isinstance(prompt[0], str):
+                actual_prompt = prompt[0]
+            elif len(prompt) == 0: # Empty list/tuple
+                 return "Prompt, if provided as a list/tuple, must contain one string element, but it was empty."
+            else: # List/tuple with multiple elements or non-string elements
+                return "Prompt, if provided as a list/tuple, must contain exactly one string element."
+        
+        if not isinstance(actual_prompt, str):
+            return f"Prompt must be a string, but received type {type(actual_prompt).__name__}."
+        if not actual_prompt.strip():
+            return "Prompt cannot be empty or only whitespace."
 
+        # Validate other inputs
         if not isinstance(seed, int) or seed < 0:
             return "Seed must be a non-negative integer"
 
@@ -499,7 +539,7 @@ class BagelTextToImage:
 
         Args:
             model: BAGEL model dictionary
-            prompt: Text prompt
+            prompt: Text prompt (can be str or list/tuple of one str)
             seed: Random seed
             image_ratio: Image aspect ratio
             cfg_text_scale: CFG text scaling
@@ -514,6 +554,22 @@ class BagelTextToImage:
         Returns:
             Generated image tensor and reasoning process text
         """
+        _prompt_input = prompt
+        actual_prompt: str
+        if isinstance(_prompt_input, (list, tuple)):
+            if len(_prompt_input) == 1 and isinstance(_prompt_input[0], str):
+                actual_prompt = _prompt_input[0]
+            else:
+                print(f"Error: Invalid prompt format in generate_image: {_prompt_input}. Expected string or list/tuple of one string.")
+                empty_image = torch.zeros((1, 512, 512, 3)) 
+                return (empty_image, "Error: Invalid prompt format during execution.")
+        elif isinstance(_prompt_input, str):
+            actual_prompt = _prompt_input
+        else:
+            print(f"Error: Invalid prompt type in generate_image: {type(_prompt_input)}. Expected string or list/tuple of one string.")
+            empty_image = torch.zeros((1, 512, 512, 3))
+            return (empty_image, "Error: Invalid prompt type during execution.")
+
         try:
             # Set random seed
             set_seed(seed)
@@ -546,18 +602,36 @@ class BagelTextToImage:
             }
 
             # Call inferencer
-            result = inferencer(text=prompt, think=show_thinking, **inference_hyper)
+            result = inferencer(text=actual_prompt, think=show_thinking, **inference_hyper)
 
-            # Convert image format
-            pil_image = result["image"]
-            tensor_image = pil_to_tensor(pil_image)
+            # Convert image format - potentially a list of images
+            output_image_or_images = result["image"]
+
+            if isinstance(output_image_or_images, list):
+                if not output_image_or_images:
+                    print("Warning: Inferencer returned an empty list of images.")
+                    empty_image = torch.zeros((1, image_shapes[1], image_shapes[0], 3)) # H, W, C assuming ComfyUI is N H W C
+                    return (empty_image, "Error: No images generated.")
+                
+                tensor_images_list = [pil_to_tensor(img_item) for img_item in output_image_or_images]
+                if not tensor_images_list: # Should be caught by the above, but defensive
+                     empty_image = torch.zeros((1, image_shapes[1], image_shapes[0], 3))
+                     return (empty_image, "Error: Failed to convert images to tensors.")
+
+                final_tensor_image = torch.cat(tensor_images_list, dim=0)
+                print(f"Generated image sequence with {len(output_image_or_images)} frames. Final shape: {final_tensor_image.shape}")
+            elif isinstance(output_image_or_images, Image.Image):
+                final_tensor_image = pil_to_tensor(output_image_or_images)
+                print(f"Generated single image with size: {output_image_or_images.size}. Final shape: {final_tensor_image.shape}")
+            else:
+                print(f"Error: Inferencer returned an unexpected image type: {type(output_image_or_images)}")
+                empty_image = torch.zeros((1, image_shapes[1], image_shapes[0], 3))
+                return (empty_image, "Error: Unexpected image data from model.")
 
             # Get reasoning process
             thinking_text = result.get("text", "") if show_thinking else ""
 
-            print(f"Generated image with size: {pil_image.size}")
-
-            return (tensor_image, thinking_text)
+            return (final_tensor_image, thinking_text)
 
         except Exception as e:
             print(f"Error in text to image generation: {e}")
@@ -693,9 +767,22 @@ class BagelImageEdit:
         **kwargs,
     ):
         """Validate input parameters"""
-        if not isinstance(prompt, str) or not prompt.strip():
-            return "Prompt must be a non-empty string"
+        # Validate prompt
+        actual_prompt = prompt
+        if isinstance(prompt, (list, tuple)):
+            if len(prompt) == 1 and isinstance(prompt[0], str):
+                actual_prompt = prompt[0]
+            elif len(prompt) == 0: # Empty list/tuple
+                 return "Prompt, if provided as a list/tuple, must contain one string element, but it was empty."
+            else: # List/tuple with multiple elements or non-string elements
+                return "Prompt, if provided as a list/tuple, must contain exactly one string element."
+        
+        if not isinstance(actual_prompt, str):
+            return f"Prompt must be a string, but received type {type(actual_prompt).__name__}."
+        if not actual_prompt.strip():
+            return "Prompt cannot be empty or only whitespace."
 
+        # Validate other inputs
         if not isinstance(seed, int) or seed < 0:
             return "Seed must be a non-negative integer"
 
@@ -744,7 +831,7 @@ class BagelImageEdit:
         Args:
             model: BAGEL model dictionary
             image: Input image tensor
-            prompt: Editing prompt
+            prompt: Editing prompt (can be str or list/tuple of one str)
             seed: Random seed
             cfg_text_scale: CFG text scaling
             cfg_img_scale: CFG image scaling
@@ -759,6 +846,20 @@ class BagelImageEdit:
         Returns:
             Edited image tensor and reasoning process text
         """
+        _prompt_input = prompt
+        actual_prompt: str
+        if isinstance(_prompt_input, (list, tuple)):
+            if len(_prompt_input) == 1 and isinstance(_prompt_input[0], str):
+                actual_prompt = _prompt_input[0]
+            else:
+                print(f"Error: Invalid prompt format in edit_image: {_prompt_input}. Expected string or list/tuple of one string.")
+                return (image, "Error: Invalid prompt format during execution.") # Return original image on error
+        elif isinstance(_prompt_input, str):
+            actual_prompt = _prompt_input
+        else:
+            print(f"Error: Invalid prompt type in edit_image: {type(_prompt_input)}. Expected string or list/tuple of one string.")
+            return (image, "Error: Invalid prompt type during execution.") # Return original image on error
+            
         try:
             # Set random seed
             set_seed(seed)
@@ -786,19 +887,34 @@ class BagelImageEdit:
 
             # Call inferencer
             result = inferencer(
-                image=pil_image, text=prompt, think=show_thinking, **inference_hyper
+                image=pil_image, text=actual_prompt, think=show_thinking, **inference_hyper
             )
 
-            # Convert image format
-            edited_pil_image = result["image"]
-            tensor_image = pil_to_tensor(edited_pil_image)
+            # Convert image format - potentially a list of images
+            output_image_or_images = result["image"]
+
+            if isinstance(output_image_or_images, list):
+                if not output_image_or_images:
+                    print("Warning: Inferencer returned an empty list of edited images.")
+                    return (image, "Error: No edited images generated.") # Return original on error
+
+                tensor_images_list = [pil_to_tensor(img_item) for img_item in output_image_or_images]
+                if not tensor_images_list:
+                     return (image, "Error: Failed to convert edited images to tensors.")
+
+                final_tensor_image = torch.cat(tensor_images_list, dim=0)
+                print(f"Generated edited image sequence with {len(output_image_or_images)} frames. Final shape: {final_tensor_image.shape}")
+            elif isinstance(output_image_or_images, Image.Image):
+                final_tensor_image = pil_to_tensor(output_image_or_images)
+                print(f"Edited single image with size: {output_image_or_images.size}. Final shape: {final_tensor_image.shape}")
+            else:
+                print(f"Error: Inferencer returned an unexpected edited image type: {type(output_image_or_images)}")
+                return (image, "Error: Unexpected edited image data from model.") # Return original
 
             # Get reasoning process
             thinking_text = result.get("text", "") if show_thinking else ""
 
-            print(f"Edited image with size: {edited_pil_image.size}")
-
-            return (tensor_image, thinking_text)
+            return (final_tensor_image, thinking_text)
 
         except Exception as e:
             print(f"Error in image editing: {e}")
@@ -864,8 +980,20 @@ class BagelImageUnderstanding:
     @classmethod
     def VALIDATE_INPUTS(cls, model, image, prompt, **kwargs):
         """Validate input parameters"""
-        if not isinstance(prompt, str) or not prompt.strip():
-            return "Prompt must be a non-empty string"
+        # Validate prompt
+        actual_prompt = prompt
+        if isinstance(prompt, (list, tuple)):
+            if len(prompt) == 1 and isinstance(prompt[0], str):
+                actual_prompt = prompt[0]
+            elif len(prompt) == 0: # Empty list/tuple
+                 return "Prompt, if provided as a list/tuple, must contain one string element, but it was empty."
+            else: # List/tuple with multiple elements or non-string elements
+                return "Prompt, if provided as a list/tuple, must contain exactly one string element."
+        
+        if not isinstance(actual_prompt, str):
+            return f"Prompt must be a string, but received type {type(actual_prompt).__name__}."
+        if not actual_prompt.strip():
+            return "Prompt cannot be empty or only whitespace."
 
         # Validate optional parameters
         if "text_temperature" in kwargs:
@@ -896,7 +1024,7 @@ class BagelImageUnderstanding:
         Args:
             model: BAGEL model dictionary
             image: Input image tensor
-            prompt: Question text
+            prompt: Question text (can be str or list/tuple of one str)
             show_thinking: Whether to display the reasoning process
             do_sample: Whether to enable sampling
             text_temperature: Text generation temperature
@@ -905,6 +1033,20 @@ class BagelImageUnderstanding:
         Returns:
             Answer text
         """
+        _prompt_input = prompt
+        actual_prompt: str
+        if isinstance(_prompt_input, (list, tuple)):
+            if len(_prompt_input) == 1 and isinstance(_prompt_input[0], str):
+                actual_prompt = _prompt_input[0]
+            else:
+                print(f"Error: Invalid prompt format in understand_image: {_prompt_input}. Expected string or list/tuple of one string.")
+                return (f"Error: Invalid prompt format during execution. Expected string, or list/tuple of one string.",)
+        elif isinstance(_prompt_input, str):
+            actual_prompt = _prompt_input
+        else:
+            print(f"Error: Invalid prompt type in understand_image: {type(_prompt_input)}. Expected string or list/tuple of one string.")
+            return (f"Error: Invalid prompt type during execution. Expected string, or list/tuple of one string.",)
+
         try:
             # Get inferencer
             inferencer = model["inferencer"]
@@ -923,7 +1065,7 @@ class BagelImageUnderstanding:
             # Call inferencer
             result = inferencer(
                 image=pil_image,
-                text=prompt,
+                text=actual_prompt,
                 think=show_thinking,
                 understanding_output=True,
                 **inference_hyper,
