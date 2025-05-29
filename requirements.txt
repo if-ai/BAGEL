@@ -12,4 +12,4 @@ sentencepiece
 transformers
 flash_attn
 accelerate
-# wandb
+bitsandbytes

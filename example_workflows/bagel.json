@@ -1,0 +1,1283 @@
+{
+    "id": "4d670fa5-e222-4474-b3e5-6c3f211659a8",
+    "extra": {
+        "ds": {
+            "scale": 0.3073560549142876,
+            "offset": [
+                2521.2540687762726,
+                1563.1945454266488
+            ]
+        },
+        "frontendVersion": "1.19.9",
+        "VHS_MetadataImage": true,
+        "VHS_latentpreview": false,
+        "VHS_KeepIntermediate": true,
+        "VHS_latentpreviewrate": 0
+    },
+    "links": [
+        [
+            1,
+            1,
+            0,
+            2,
+            0,
+            "BAGEL_MODEL"
+        ],
+        [
+            3,
+            2,
+            1,
+            4,
+            0,
+            "STRING"
+        ],
+        [
+            4,
+            2,
+            0,
+            3,
+            0,
+            "IMAGE"
+        ],
+        [
+            5,
+            2,
+            0,
+            5,
+            0,
+            "IMAGE"
+        ],
+        [
+            9,
+            1,
+            0,
+            7,
+            0,
+            "BAGEL_MODEL"
+        ],
+        [
+            12,
+            7,
+            0,
+            9,
+            0,
+            "STRING"
+        ],
+        [
+            21,
+            20,
+            0,
+            21,
+            0,
+            "IMAGE"
+        ],
+        [
+            22,
+            20,
+            0,
+            22,
+            0,
+            "IMAGE"
+        ],
+        [
+            29,
+            1,
+            0,
+            26,
+            0,
+            "BAGEL_MODEL"
+        ],
+        [
+            30,
+            26,
+            0,
+            27,
+            0,
+            "IMAGE"
+        ],
+        [
+            31,
+            26,
+            1,
+            28,
+            0,
+            "STRING"
+        ],
+        [
+            32,
+            30,
+            0,
+            2,
+            1,
+            "STRING"
+        ],
+        [
+            35,
+            1,
+            0,
+            20,
+            0,
+            "BAGEL_MODEL"
+        ],
+        [
+            36,
+            31,
+            0,
+            20,
+            2,
+            "STRING"
+        ],
+        [
+            37,
+            32,
+            0,
+            7,
+            2,
+            "STRING"
+        ],
+        [
+            38,
+            19,
+            0,
+            33,
+            0,
+            "IMAGE"
+        ],
+        [
+            39,
+            33,
+            0,
+            20,
+            1,
+            "IMAGE"
+        ],
+        [
+            40,
+            20,
+            0,
+            34,
+            0,
+            "IMAGE"
+        ],
+        [
+            41,
+            7,
+            0,
+            26,
+            1,
+            "STRING"
+        ],
+        [
+            42,
+            23,
+            0,
+            35,
+            0,
+            "IMAGE"
+        ],
+        [
+            43,
+            35,
+            0,
+            7,
+            1,
+            "IMAGE"
+        ],
+        [
+            45,
+            2,
+            0,
+            37,
+            0,
+            "IMAGE"
+        ],
+        [
+            47,
+            7,
+            0,
+            38,
+            0,
+            "STRING"
+        ],
+        [
+            48,
+            2,
+            1,
+            39,
+            0,
+            "STRING"
+        ],
+        [
+            50,
+            20,
+            1,
+            41,
+            0,
+            "STRING"
+        ],
+        [
+            51,
+            26,
+            0,
+            42,
+            0,
+            "IMAGE"
+        ],
+        [
+            52,
+            26,
+            1,
+            40,
+            0,
+            "STRING"
+        ]
+    ],
+    "nodes": [
+        {
+            "id": 5,
+            "pos": [
+                2525.617431640625,
+                -372.01605224609375
+            ],
+            "mode": 4,
+            "size": [
+                270,
+                270
+            ],
+            "type": "SaveImage",
+            "flags": {},
+            "order": 11,
+            "inputs": [
+                {
+                    "link": 5,
+                    "name": "images",
+                    "type": "IMAGE"
+                }
+            ],
+            "outputs": [],
+            "properties": {},
+            "widgets_values": [
+                "ComfyUI"
+            ]
+        },
+        {
+            "id": 3,
+            "pos": [
+                2549.024658203125,
+                -673.9170532226562
+            ],
+            "mode": 4,
+            "size": [
+                210,
+                246.00001525878906
+            ],
+            "type": "PreviewImage",
+            "flags": {},
+            "order": 10,
+            "inputs": [
+                {
+                    "link": 4,
+                    "name": "images",
+                    "type": "IMAGE",
+                    "label": "images"
+                }
+            ],
+            "outputs": [],
+            "properties": {
+                "ver": "0.3.30",
+                "cnr_id": "comfy-core",
+                "Node name for S&R": "PreviewImage"
+            },
+            "widgets_values": []
+        },
+        {
+            "id": 1,
+            "pos": [
+                2064.49072265625,
+                -788.8814086914062
+            ],
+            "mode": 0,
+            "size": [
+                315,
+                106
+            ],
+            "type": "BagelModelLoader",
+            "flags": {},
+            "order": 0,
+            "inputs": [],
+            "outputs": [
+                {
+                    "name": "model",
+                    "type": "BAGEL_MODEL",
+                    "label": "model",
+                    "links": [
+                        1,
+                        9,
+                        29,
+                        35
+                    ]
+                }
+            ],
+            "properties": {
+                "ver": "4bb49e5232604e4838463f130b3ba7026e428c1d",
+                "aux_id": "neverbiasu/ComfyUI-Bagel",
+                "Node name for S&R": "BagelModelLoader"
+            },
+            "widgets_values": [
+                "models/BAGEL-7B-MoT"
+            ]
+        },
+        {
+            "id": 19,
+            "pos": [
+                1978.532958984375,
+                1204.6800537109375
+            ],
+            "mode": 0,
+            "size": [
+                274.080078125,
+                314.00006103515625
+            ],
+            "type": "LoadImage",
+            "flags": {},
+            "order": 1,
+            "inputs": [],
+            "outputs": [
+                {
+                    "name": "IMAGE",
+                    "type": "IMAGE",
+                    "links": [
+                        38
+                    ]
+                },
+                {
+                    "name": "MASK",
+                    "type": "MASK",
+                    "links": null
+                }
+            ],
+            "properties": {
+                "Node name for S&R": "LoadImage"
+            },
+            "widgets_values": [
+                "videoframe_29214.png",
+                "image"
+            ]
+        },
+        {
+            "id": 21,
+            "pos": [
+                3220.37451171875,
+                1071.773681640625
+            ],
+            "mode": 4,
+            "size": [
+                270,
+                58
+            ],
+            "type": "SaveImage",
+            "flags": {},
+            "order": 16,
+            "inputs": [
+                {
+                    "link": 21,
+                    "name": "images",
+                    "type": "IMAGE"
+                }
+            ],
+            "outputs": [],
+            "properties": {},
+            "widgets_values": [
+                "ComfyUI"
+            ]
+        },
+        {
+            "id": 22,
+            "pos": [
+                3514.803955078125,
+                1088.0955810546875
+            ],
+            "mode": 4,
+            "size": [
+                140,
+                26
+            ],
+            "type": "PreviewImage",
+            "flags": {},
+            "order": 17,
+            "inputs": [
+                {
+                    "link": 22,
+                    "name": "images",
+                    "type": "IMAGE"
+                }
+            ],
+            "outputs": [],
+            "properties": {
+                "Node name for S&R": "PreviewImage"
+            },
+            "widgets_values": []
+        },
+        {
+            "id": 35,
+            "pos": [
+                1790.7972412109375,
+                63.095176696777344
+            ],
+            "mode": 0,
+            "size": [
+                309.1890563964844,
+                154
+            ],
+            "type": "ComfyUIDeployExternalImage",
+            "flags": {},
+            "order": 8,
+            "inputs": [
+                {
+                    "link": 42,
+                    "name": "default_value",
+                    "type": "IMAGE",
+                    "shape": 7
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "image",
+                    "type": "IMAGE",
+                    "links": [
+                        43
+                    ]
+                }
+            ],
+            "properties": {
+                "Node name for S&R": "ComfyUIDeployExternalImage"
+            },
+            "widgets_values": [
+                "ivl_img_input",
+                "image-understanding-input",
+                "",
+                "",
+                ""
+            ]
+        },
+        {
+            "id": 34,
+            "pos": [
+                3220.90380859375,
+                1188.750244140625
+            ],
+            "mode": 0,
+            "size": [
+                281.9683532714844,
+                130
+            ],
+            "type": "ComfyDeployOutputImage",
+            "flags": {},
+            "order": 18,
+            "inputs": [
+                {
+                    "link": 40,
+                    "name": "images",
+                    "type": "IMAGE"
+                }
+            ],
+            "outputs": [],
+            "properties": {
+                "Node name for S&R": "ComfyDeployOutputImage"
+            },
+            "widgets_values": [
+                "ComfyUI",
+                "jpg",
+                90,
+                "output_i2i"
+            ]
+        },
+        {
+            "id": 30,
+            "pos": [
+                1630.252197265625,
+                -583.9675903320312
+            ],
+            "mode": 0,
+            "size": [
+                400,
+                200
+            ],
+            "type": "ComfyUIDeployExternalText",
+            "flags": {},
+            "order": 2,
+            "inputs": [],
+            "outputs": [
+                {
+                    "name": "text",
+                    "type": "STRING",
+                    "links": [
+                        32
+                    ]
+                }
+            ],
+            "properties": {
+                "Node name for S&R": "ComfyUIDeployExternalText"
+            },
+            "widgets_values": [
+                "prompt_t2i",
+                "A female cosplayer portraying an ethereal fairy or elf, wearing a flowing dress made of delicate fabrics in soft, mystical colors like emerald green and silver. She has pointed ears, a gentle, enchanting expression, and her outfit is adorned with sparkling jewels and intricate patterns. The background is a magical forest with glowing plants, mystical creatures, and a serene atmosphere.",
+                "generate-image-Prompt",
+                ""
+            ]
+        },
+        {
+            "id": 4,
+            "pos": [
+                2826.72998046875,
+                -513.9642944335938
+            ],
+            "mode": 0,
+            "size": [
+                295.9617614746094,
+                404.6077880859375
+            ],
+            "type": "ShowText|pysssss",
+            "flags": {
+                "collapsed": false
+            },
+            "order": 13,
+            "inputs": [
+                {
+                    "link": 3,
+                    "name": "text",
+                    "type": "STRING",
+                    "label": "text"
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "STRING",
+                    "type": "STRING",
+                    "label": "STRING",
+                    "links": null,
+                    "shape": 6
+                }
+            ],
+            "properties": {
+                "ver": "1.2.5",
+                "cnr_id": "comfyui-custom-scripts",
+                "Node name for S&R": "ShowText|pysssss"
+            },
+            "widgets_values": [
+                "<think>\nAlright, let's bring this vision to life. First, the subject is a female cosplayer dressed as an ethereal fairy or elf. She should have a flowing dress made of delicate fabrics in soft, mystical colors like emerald green and silver. The fabric should appear light and airy, with intricate patterns that shimmer and catch the light. Her pointed ears are a key feature, adding to the elf-like appearance. Her expression should be gentle and enchanting, with a soft gaze that conveys a sense of wonder and magic. The outfit should be adorned with sparkling jewels, perhaps in shades of silver or pale blue, adding a touch of elegance and mystique. The background is a magical forest, filled with glowing plants that emit a soft, ethereal light. There might be mystical creatures like fairies, butterflies, or small, glowing animals that add to the enchantment. The atmosphere should be serene and dreamlike, with a sense of wonder and otherworldliness. The lighting should be soft and diffused, with a warm glow that enhances the mystical ambiance. The overall composition should feel immersive and magical, drawing the viewer into the fairy-tale world.\n</think>"
+            ]
+        },
+        {
+            "id": 9,
+            "pos": [
+                2170.396728515625,
+                331.402587890625
+            ],
+            "mode": 0,
+            "size": [
+                295.9617614746094,
+                404.6077880859375
+            ],
+            "type": "ShowText|pysssss",
+            "flags": {},
+            "order": 20,
+            "inputs": [
+                {
+                    "link": 12,
+                    "name": "text",
+                    "type": "STRING",
+                    "label": "text"
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "STRING",
+                    "type": "STRING",
+                    "label": "STRING",
+                    "links": null,
+                    "shape": 6
+                }
+            ],
+            "properties": {
+                "ver": "1.2.5",
+                "cnr_id": "comfyui-custom-scripts",
+                "Node name for S&R": "ShowText|pysssss"
+            },
+            "widgets_values": []
+        },
+        {
+            "id": 2,
+            "pos": [
+                2070.29638671875,
+                -627.8712768554688
+            ],
+            "mode": 0,
+            "size": [
+                376.3270568847656,
+                434.2239685058594
+            ],
+            "type": "BagelTextToImage",
+            "flags": {},
+            "order": 7,
+            "inputs": [
+                {
+                    "link": 1,
+                    "name": "model",
+                    "type": "BAGEL_MODEL",
+                    "label": "model"
+                },
+                {
+                    "link": 32,
+                    "name": "prompt",
+                    "type": "STRING",
+                    "widget": {
+                        "name": "prompt"
+                    }
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "image",
+                    "type": "IMAGE",
+                    "label": "image",
+                    "links": [
+                        4,
+                        5,
+                        45
+                    ]
+                },
+                {
+                    "name": "thinking",
+                    "type": "STRING",
+                    "label": "thinking",
+                    "links": [
+                        3,
+                        48
+                    ]
+                }
+            ],
+            "properties": {
+                "ver": "4bb49e5232604e4838463f130b3ba7026e428c1d",
+                "aux_id": "neverbiasu/ComfyUI-Bagel",
+                "Node name for S&R": "BagelTextToImage"
+            },
+            "widgets_values": [
+                "A female cosplayer portraying an ethereal fairy or elf, wearing a flowing dress made of delicate fabrics in soft, mystical colors like emerald green and silver. She has pointed ears, a gentle, enchanting expression, and her outfit is adorned with sparkling jewels and intricate patterns. The background is a magical forest with glowing plants, mystical creatures, and a serene atmosphere.",
+                368225,
+                "randomize",
+                "1:1",
+                4,
+                50,
+                true,
+                0.4,
+                3,
+                1,
+                "global",
+                0.3
+            ]
+        },
+        {
+            "id": 39,
+            "pos": [
+                3168.7060546875,
+                -520.1776733398438
+            ],
+            "mode": 0,
+            "size": [
+                270,
+                106
+            ],
+            "type": "ComfyDeployOutputText",
+            "flags": {},
+            "order": 14,
+            "inputs": [
+                {
+                    "link": 48,
+                    "name": "text",
+                    "type": "STRING"
+                }
+            ],
+            "outputs": [],
+            "properties": {
+                "Node name for S&R": "ComfyDeployOutputText"
+            },
+            "widgets_values": [
+                "ComfyUI",
+                "txt",
+                "output_t2i_thinking"
+            ]
+        },
+        {
+            "id": 7,
+            "pos": [
+                2159.77001953125,
+                71.17314147949219
+            ],
+            "mode": 0,
+            "size": [
+                400,
+                204
+            ],
+            "type": "BagelImageUnderstanding",
+            "flags": {},
+            "order": 15,
+            "inputs": [
+                {
+                    "link": 9,
+                    "name": "model",
+                    "type": "BAGEL_MODEL"
+                },
+                {
+                    "link": 43,
+                    "name": "image",
+                    "type": "IMAGE"
+                },
+                {
+                    "link": 37,
+                    "name": "prompt",
+                    "type": "STRING",
+                    "widget": {
+                        "name": "prompt"
+                    }
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "text",
+                    "type": "STRING",
+                    "links": [
+                        12,
+                        41,
+                        47
+                    ]
+                }
+            ],
+            "properties": {
+                "Node name for S&R": "BagelImageUnderstanding"
+            },
+            "widgets_values": [
+                "What do you see in this image?",
+                false,
+                false,
+                0.3,
+                512
+            ]
+        },
+        {
+            "id": 20,
+            "pos": [
+                2678.106201171875,
+                1189.306640625
+            ],
+            "mode": 0,
+            "size": [
+                400,
+                372
+            ],
+            "type": "BagelImageEdit",
+            "flags": {},
+            "order": 9,
+            "inputs": [
+                {
+                    "link": 35,
+                    "name": "model",
+                    "type": "BAGEL_MODEL"
+                },
+                {
+                    "link": 39,
+                    "name": "image",
+                    "type": "IMAGE"
+                },
+                {
+                    "link": 36,
+                    "name": "prompt",
+                    "type": "STRING",
+                    "widget": {
+                        "name": "prompt"
+                    }
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "image",
+                    "type": "IMAGE",
+                    "links": [
+                        21,
+                        22,
+                        40
+                    ]
+                },
+                {
+                    "name": "thinking",
+                    "type": "STRING",
+                    "links": [
+                        50
+                    ]
+                }
+            ],
+            "properties": {
+                "Node name for S&R": "BagelImageEdit"
+            },
+            "widgets_values": [
+                "",
+                0,
+                "randomize",
+                4,
+                2,
+                50,
+                false,
+                0,
+                3,
+                1,
+                "text_channel",
+                0.3
+            ]
+        },
+        {
+            "id": 41,
+            "pos": [
+                3253.365966796875,
+                1399.8724365234375
+            ],
+            "mode": 0,
+            "size": [
+                270,
+                106
+            ],
+            "type": "ComfyDeployOutputText",
+            "flags": {},
+            "order": 19,
+            "inputs": [
+                {
+                    "link": 50,
+                    "name": "text",
+                    "type": "STRING"
+                }
+            ],
+            "outputs": [],
+            "properties": {
+                "Node name for S&R": "ComfyDeployOutputText"
+            },
+            "widgets_values": [
+                "ComfyUI",
+                "txt",
+                "output_i2i_thinking"
+            ]
+        },
+        {
+            "id": 38,
+            "pos": [
+                2209.18359375,
+                821.5044555664062
+            ],
+            "mode": 0,
+            "size": [
+                270,
+                106
+            ],
+            "type": "ComfyDeployOutputText",
+            "flags": {},
+            "order": 22,
+            "inputs": [
+                {
+                    "link": 47,
+                    "name": "text",
+                    "type": "STRING"
+                }
+            ],
+            "outputs": [],
+            "properties": {
+                "Node name for S&R": "ComfyDeployOutputText"
+            },
+            "widgets_values": [
+                "ComfyUI",
+                "txt",
+                "output_image_description"
+            ]
+        },
+        {
+            "id": 26,
+            "pos": [
+                2604.43115234375,
+                80.95854949951172
+            ],
+            "mode": 0,
+            "size": [
+                376.3270568847656,
+                434.2239685058594
+            ],
+            "type": "BagelTextToImage",
+            "flags": {},
+            "order": 21,
+            "inputs": [
+                {
+                    "link": 29,
+                    "name": "model",
+                    "type": "BAGEL_MODEL",
+                    "label": "model"
+                },
+                {
+                    "link": 41,
+                    "name": "prompt",
+                    "type": "STRING",
+                    "widget": {
+                        "name": "prompt"
+                    }
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "image",
+                    "type": "IMAGE",
+                    "label": "image",
+                    "links": [
+                        30,
+                        51
+                    ]
+                },
+                {
+                    "name": "thinking",
+                    "type": "STRING",
+                    "label": "thinking",
+                    "links": [
+                        31,
+                        52
+                    ]
+                }
+            ],
+            "properties": {
+                "ver": "4bb49e5232604e4838463f130b3ba7026e428c1d",
+                "aux_id": "neverbiasu/ComfyUI-Bagel",
+                "Node name for S&R": "BagelTextToImage"
+            },
+            "widgets_values": [
+                "A female cosplayer portraying an ethereal fairy or elf, wearing a flowing dress made of delicate fabrics in soft, mystical colors like emerald green and silver. She has pointed ears, a gentle, enchanting expression, and her outfit is adorned with sparkling jewels and intricate patterns. The background is a magical forest with glowing plants, mystical creatures, and a serene atmosphere.",
+                368225,
+                "randomize",
+                "1:1",
+                4,
+                50,
+                true,
+                0.4,
+                3,
+                1,
+                "global",
+                0.3
+            ]
+        },
+        {
+            "id": 28,
+            "pos": [
+                2721.386474609375,
+                603.6243286132812
+            ],
+            "mode": 0,
+            "size": [
+                295.9617614746094,
+                404.6077880859375
+            ],
+            "type": "ShowText|pysssss",
+            "flags": {},
+            "order": 25,
+            "inputs": [
+                {
+                    "link": 31,
+                    "name": "text",
+                    "type": "STRING",
+                    "label": "text"
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "STRING",
+                    "type": "STRING",
+                    "label": "STRING",
+                    "links": null,
+                    "shape": 6
+                }
+            ],
+            "properties": {
+                "ver": "1.2.5",
+                "cnr_id": "comfyui-custom-scripts",
+                "Node name for S&R": "ShowText|pysssss"
+            },
+            "widgets_values": []
+        },
+        {
+            "id": 40,
+            "pos": [
+                3105.32080078125,
+                515.3018798828125
+            ],
+            "mode": 0,
+            "size": [
+                270,
+                106
+            ],
+            "type": "ComfyDeployOutputText",
+            "flags": {},
+            "order": 26,
+            "inputs": [
+                {
+                    "link": 52,
+                    "name": "text",
+                    "type": "STRING"
+                }
+            ],
+            "outputs": [],
+            "properties": {
+                "Node name for S&R": "ComfyDeployOutputText"
+            },
+            "widgets_values": [
+                "ComfyUI",
+                "txt",
+                "output_understanding_thinking"
+            ]
+        },
+        {
+            "id": 42,
+            "pos": [
+                3089.64599609375,
+                289.2189025878906
+            ],
+            "mode": 0,
+            "size": [
+                281.9683532714844,
+                130
+            ],
+            "type": "ComfyDeployOutputImage",
+            "flags": {},
+            "order": 24,
+            "inputs": [
+                {
+                    "link": 51,
+                    "name": "images",
+                    "type": "IMAGE"
+                }
+            ],
+            "outputs": [],
+            "properties": {
+                "Node name for S&R": "ComfyDeployOutputImage"
+            },
+            "widgets_values": [
+                "ComfyUI",
+                "jpg",
+                90,
+                "output_understanding_image"
+            ]
+        },
+        {
+            "id": 31,
+            "pos": [
+                2196.019287109375,
+                1575.060302734375
+            ],
+            "mode": 0,
+            "size": [
+                400,
+                200
+            ],
+            "type": "ComfyUIDeployExternalText",
+            "flags": {},
+            "order": 3,
+            "inputs": [],
+            "outputs": [
+                {
+                    "name": "text",
+                    "type": "STRING",
+                    "links": [
+                        36
+                    ]
+                }
+            ],
+            "properties": {
+                "Node name for S&R": "ComfyUIDeployExternalText"
+            },
+            "widgets_values": [
+                "prompt_i2i",
+                "Extend the image 9:16 ratio and generate A full body shot",
+                "edit-image-prompt",
+                ""
+            ]
+        },
+        {
+            "id": 37,
+            "pos": [
+                2821.46630859375,
+                -697.390869140625
+            ],
+            "mode": 0,
+            "size": [
+                281.9683532714844,
+                130
+            ],
+            "type": "ComfyDeployOutputImage",
+            "flags": {},
+            "order": 12,
+            "inputs": [
+                {
+                    "link": 45,
+                    "name": "images",
+                    "type": "IMAGE"
+                }
+            ],
+            "outputs": [],
+            "properties": {
+                "Node name for S&R": "ComfyDeployOutputImage"
+            },
+            "widgets_values": [
+                "ComfyUI",
+                "jpg",
+                90,
+                "output_t2i"
+            ]
+        },
+        {
+            "id": 33,
+            "pos": [
+                2307.723876953125,
+                1204.6800537109375
+            ],
+            "mode": 0,
+            "size": [
+                309.1890563964844,
+                154
+            ],
+            "type": "ComfyUIDeployExternalImage",
+            "flags": {},
+            "order": 6,
+            "inputs": [
+                {
+                    "link": 38,
+                    "name": "default_value",
+                    "type": "IMAGE",
+                    "shape": 7
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "image",
+                    "type": "IMAGE",
+                    "links": [
+                        39
+                    ]
+                }
+            ],
+            "properties": {
+                "Node name for S&R": "ComfyUIDeployExternalImage"
+            },
+            "widgets_values": [
+                "i2i_img_input",
+                "edit-image-input",
+                "",
+                "",
+                ""
+            ]
+        },
+        {
+            "id": 27,
+            "pos": [
+                3091.74609375,
+                158.00462341308594
+            ],
+            "mode": 4,
+            "size": [
+                270,
+                58
+            ],
+            "type": "SaveImage",
+            "flags": {},
+            "order": 23,
+            "inputs": [
+                {
+                    "link": 30,
+                    "name": "images",
+                    "type": "IMAGE"
+                }
+            ],
+            "outputs": [],
+            "properties": {},
+            "widgets_values": [
+                "ComfyUI"
+            ]
+        },
+        {
+            "id": 32,
+            "pos": [
+                1709.365234375,
+                274.57672119140625
+            ],
+            "mode": 0,
+            "size": [
+                400,
+                200
+            ],
+            "type": "ComfyUIDeployExternalText",
+            "flags": {},
+            "order": 4,
+            "inputs": [],
+            "outputs": [
+                {
+                    "name": "text",
+                    "type": "STRING",
+                    "links": [
+                        37
+                    ]
+                }
+            ],
+            "properties": {
+                "Node name for S&R": "ComfyUIDeployExternalText"
+            },
+            "widgets_values": [
+                "prompt_vl",
+                "generate a vivid word image description of the image add the art style, aesthetics, type of shot or composition no more than 50 words long",
+                "image-uderstanding-Prompt",
+                ""
+            ]
+        },
+        {
+            "id": 23,
+            "pos": [
+                1412.9571533203125,
+                61.397342681884766
+            ],
+            "mode": 0,
+            "size": [
+                274.080078125,
+                314.0000305175781
+            ],
+            "type": "LoadImage",
+            "flags": {},
+            "order": 5,
+            "inputs": [],
+            "outputs": [
+                {
+                    "name": "IMAGE",
+                    "type": "IMAGE",
+                    "links": [
+                        42
+                    ]
+                },
+                {
+                    "name": "MASK",
+                    "type": "MASK",
+                    "links": null
+                }
+            ],
+            "properties": {
+                "Node name for S&R": "LoadImage"
+            },
+            "widgets_values": [
+                "1ca61801-5b3a-4e43-bcc1-e64d4f0b0fb4.jpeg",
+                "image"
+            ]
+        }
+    ],
+    "config": {},
+    "groups": [],
+    "version": 0.4,
+    "revision": 0,
+    "last_link_id": 52,
+    "last_node_id": 42
+}
