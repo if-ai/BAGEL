@@ -159,6 +159,8 @@ def check_model_files(model_path: str, precision: str = "bfloat16") -> bool:
     expected_ema_file = "ema.safetensors"
     if precision.startswith("fp8"):
         expected_ema_file = "ema-FP8.safetensors"
+    elif precision == "int8":
+        expected_ema_file = "model_int8.safetensors"
     
     required_files.append(expected_ema_file)
 
@@ -198,12 +200,12 @@ class BagelModelLoader:
                     "STRING",
                     {
                         "default": "ByteDance-Seed/BAGEL-7B-MoT",
-                        "tooltip": "Hugging Face model repo ID or local path. For FP8 models, ensure this path points to the FP8 version (e.g., 'meimeilook/BAGEL-7B-MoT-FP8') and select the corresponding FP8 precision.",
+                        "tooltip": "Hugging Face model repo ID or local path. For FP8 models, ensure this path points to the FP8 version (e.g., 'meimeilook/BAGEL-7B-MoT-FP8') and select the corresponding FP8 precision. For INT8, ensure it points to an INT8 .safetensors model.",
                     },
                 ),
                 "precision": (
-                    ["bfloat16", "fp8_e4m3fn", "fp8_e5m2 (coming soon)"],
-                    {"default": "bfloat16", "tooltip": "Model precision. Select fp8 for FP8 quantized models (weights stored as FP8, used as bfloat16)."},
+                    ["bfloat16", "fp8_e4m3fn", "fp8_e5m2 (coming soon)", "int8"],
+                    {"default": "bfloat16", "tooltip": "Model precision. Select fp8 for FP8 quantized models. Select int8 for INT8 quantized .safetensors models."},
                 ),
             }
         }
@@ -218,10 +220,12 @@ class BagelModelLoader:
         """Validate input parameters"""
         if not isinstance(model_path, str) or not model_path.strip():
             return "Model path must be a non-empty string"
-        if precision not in ["bfloat16", "fp8_e4m3fn", "fp8_e5m2 (coming soon)"]:
+        if precision not in ["bfloat16", "fp8_e4m3fn", "fp8_e5m2 (coming soon)", "int8"]:
             return "Invalid precision selected."
         if precision == "fp8_e5m2 (coming soon)":
             print("Note: fp8_e5m2 precision is marked as 'coming soon' and is experimental.")
+        if precision == "int8":
+            print("Note: INT8 precision assumes a .safetensors model with INT8 weights (e.g., model_int8.safetensors).")
         return True
 
     def load_model(self, model_path: str, precision: str) -> Tuple[Dict[str, Any]]:
@@ -230,7 +234,7 @@ class BagelModelLoader:
 
         Args:
             model_path: URL to the Hugging Face model repository or local path
-            precision: The precision to load the model with ("bfloat16", "fp8_e4m3fn", "fp8_e5m2 (coming soon)")
+            precision: The precision to load the model with ("bfloat16", "fp8_e4m3fn", "fp8_e5m2 (coming soon)", "int8")
 
         Returns:
             Dictionary containing all model components
@@ -323,6 +327,10 @@ class BagelModelLoader:
                 checkpoint_to_load = "ema-FP8.safetensors"
                 # dtype remains bfloat16 to mimic app (FP8 for storage, bfloat16 for compute)
                 print(f"Using FP8 checkpoint: {checkpoint_to_load}. Weights will be loaded as bfloat16.")
+            elif precision == "int8":
+                checkpoint_to_load = "model_int8.safetensors"
+                # Assuming INT8 weights are also dequantized to bfloat16 for computation
+                print(f"Using INT8 checkpoint: {checkpoint_to_load}. Weights will be loaded as bfloat16.")
             
             full_checkpoint_path = os.path.join(local_model_dir, checkpoint_to_load)
 
