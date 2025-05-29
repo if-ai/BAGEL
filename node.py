@@ -7,6 +7,7 @@ import subprocess
 from typing import Dict, Tuple, Optional, Any, Union
 from PIL import Image
 from folder_paths import folder_names_and_paths
+import comfy.utils # For progress bar
 
 # Add current directory to path
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -240,13 +241,18 @@ class BagelModelLoader:
             Dictionary containing all model components
         """
         try:
-            # Define base model directory - always use the same directory regardless of precision
+            pbar = comfy.utils.ProgressBar(10) # Initialize progress bar (e.g., 10 steps for loading)
+            current_step = 0
+
+            def update_pbar(step_increment=1, description=""):
+                nonlocal current_step
+                current_step += step_increment
+                pbar.update_absolute(current_step, 10, description if description else None)
+
             base_model_dir = os.path.join(os.getcwd(), "models", "bagel")
-
-            # Always use the main model directory name, regardless of precision
             local_model_dir = os.path.join(base_model_dir, "BAGEL-7B-MoT")
+            update_pbar(description="Checking local files...")
 
-            # Check if model exists locally, if not, download it
             if not os.path.exists(local_model_dir) or not check_model_files(local_model_dir, precision):
                 print(
                     f"Model not found locally or missing files for precision '{precision}'. Attempting to download from {model_path}..."
@@ -260,6 +266,9 @@ class BagelModelLoader:
                         f"Please manually download it and place it in {local_model_dir}"
                     )
                 print(f"Successfully downloaded BAGEL model to {local_model_dir}")
+                update_pbar(description="Download complete.")
+            
+            update_pbar(description=f"Loading {precision} model...")
 
             # Final check that all required files exist for the specified precision
             if not check_model_files(local_model_dir, precision):
@@ -320,18 +329,21 @@ class BagelModelLoader:
             
             # Determine checkpoint file and dtype for loading
             checkpoint_to_load = "ema.safetensors"
-            torch_dtype_for_load = torch.bfloat16 # Default, also for FP8 files as per Gradio app
+            torch_dtype_for_load = torch.bfloat16 # Default
 
             if precision.startswith("fp8"):
                 checkpoint_to_load = "ema-FP8.safetensors"
-                # dtype remains bfloat16 to mimic app (FP8 for storage, bfloat16 for compute)
-                print(f"Using FP8 checkpoint: {checkpoint_to_load}. Weights will be loaded as bfloat16.")
+                torch_dtype_for_load = torch.float8_e4m3fn # Load as FP8
+                print(f"Using FP8 checkpoint: {checkpoint_to_load}. Weights will be loaded as {torch_dtype_for_load}.")
             elif precision == "int8":
                 checkpoint_to_load = "model_int8.safetensors"
-                # Assuming INT8 weights are also dequantized to bfloat16 for computation
-                print(f"Using INT8 checkpoint: {checkpoint_to_load}. Weights will be loaded as bfloat16.")
+                torch_dtype_for_load = torch.int8 # Load as INT8
+                print(f"Using INT8 checkpoint: {checkpoint_to_load}. Weights will be loaded as {torch_dtype_for_load}.")
+            else: # bfloat16
+                 print(f"Using bfloat16 checkpoint: {checkpoint_to_load}. Weights will be loaded as {torch_dtype_for_load}.")
             
             full_checkpoint_path = os.path.join(local_model_dir, checkpoint_to_load)
+            update_pbar(description=f"Loading {checkpoint_to_load}...")
 
             if not os.path.exists(full_checkpoint_path):
                 # This should ideally be caught by check_model_files earlier
@@ -345,6 +357,7 @@ class BagelModelLoader:
                 dtype=torch_dtype_for_load,
                 force_hooks=True,
             ).eval()
+            update_pbar(description="Model weights loaded.")
 
             # Create inferencer
             inferencer = InterleaveInferencer(
@@ -355,6 +368,7 @@ class BagelModelLoader:
                 vit_transform=vit_transform,
                 new_token_ids=new_token_ids,
             )
+            update_pbar(description="Inferencer created.")
 
             # Wrap as model dictionary
             model_dict = {
@@ -367,7 +381,7 @@ class BagelModelLoader:
                 "config": config,
                 "model_path": local_model_dir,
             }
-
+            pbar.update_absolute(10, 10, "Model loaded!") # Final update
             print(f"Successfully loaded BAGEL model from {local_model_dir}")
             return (model_dict,)
 
@@ -568,8 +582,13 @@ class BagelTextToImage:
                 "image_shapes": image_shapes,
             }
 
-            # Call inferencer
-            result = inferencer(text=actual_prompt, think=show_thinking, **inference_hyper)
+            # Prepare args for inferencer call, removing node-specific ones if any
+            inference_call_args = inference_hyper.copy()
+            inference_call_args["text"] = actual_prompt
+            inference_call_args["think"] = show_thinking
+            
+            # num_timesteps from input is a good proxy for total steps for progress bar
+            result = _call_inferencer_with_progress(inferencer, num_timesteps, **inference_call_args)
 
             # Convert image format - potentially a list of images
             output_image_or_images = result["image"]
@@ -800,11 +819,13 @@ class BagelImageEdit:
                 "cfg_renorm_type": cfg_renorm_type,
             }
 
-            # Call inferencer
-            result = inferencer(
-                image=pil_image, text=actual_prompt, think=show_thinking, **inference_hyper
-            )
+            inference_call_args = inference_hyper.copy()
+            inference_call_args["image"] = pil_image
+            inference_call_args["text"] = actual_prompt
+            inference_call_args["think"] = show_thinking
 
+            result = _call_inferencer_with_progress(inferencer, num_timesteps, **inference_call_args)
+            
             # Convert image format - potentially a list of images
             output_image_or_images = result["image"]
 
@@ -949,14 +970,14 @@ class BagelImageUnderstanding:
                 "max_think_token_n": max_new_tokens,
             }
 
-            # Call inferencer
-            result = inferencer(
-                image=pil_image,
-                text=actual_prompt,
-                think=show_thinking,
-                understanding_output=True,
-                **inference_hyper,
-            )
+            inference_call_args = inference_hyper.copy()
+            inference_call_args["image"] = pil_image
+            inference_call_args["text"] = actual_prompt
+            inference_call_args["think"] = show_thinking
+            inference_call_args["understanding_output"] = True # This was specific to understand_image
+
+            # max_new_tokens can be a proxy for progress bar total steps
+            result = _call_inferencer_with_progress(inferencer, max_new_tokens, **inference_call_args)
 
             answer_text = result["text"]
 
@@ -987,3 +1008,26 @@ NODE_DISPLAY_NAME_MAPPINGS = {
 
 # Export for ComfyUI
 __all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]
+
+# --- Progress bar integration for inference methods --- 
+# We need a way to pass the progress bar to the inferencer if it supports it.
+# The commit https://github.com/neverbiasu/ComfyUI-BAGEL/pull/23/commits/d1f4f2390cbd4fb3f61ef0ffa7bdf50dcf0c45a7
+# modifies the inferencer and bagel model itself to accept a progress_callback.
+# Assuming the inferencer has been updated similarly to accept a progress_callback:
+
+def _call_inferencer_with_progress(inferencer, pbar_total_steps, **kwargs):
+    pbar = comfy.utils.ProgressBar(pbar_total_steps)
+    current_step = 0
+    def progress_callback_wrapper(step, total_steps_from_inferencer, description=""):
+        nonlocal current_step
+        # Map inferencer's progress to our pbar_total_steps for this node
+        # This is a simple mapping, might need adjustment based on how inferencer reports steps
+        node_progress_step = int((step / total_steps_from_inferencer) * pbar_total_steps)
+        if node_progress_step > current_step:
+             current_step = node_progress_step
+        pbar.update_absolute(current_step, pbar_total_steps, description if description else None)
+
+    kwargs["progress_callback"] = progress_callback_wrapper
+    result = inferencer(**kwargs)
+    pbar.update_absolute(pbar_total_steps, pbar_total_steps, "Done!")
+    return result
