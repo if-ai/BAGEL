@@ -484,61 +484,6 @@ class BagelTextToImage:
     FUNCTION = "generate_image"
     CATEGORY = "BAGEL/Core"
 
-    @classmethod
-    def VALIDATE_INPUTS(
-        cls, model, prompt, seed, image_ratio, cfg_text_scale, num_timesteps, **kwargs
-    ):
-        """Validate input parameters"""
-        # DEBUG: Print what we received
-        print(f"DEBUG BAGEL VALIDATION - prompt type: {type(prompt)}, value: {repr(prompt)}")
-        print(f"DEBUG BAGEL VALIDATION - seed type: {type(seed)}, value: {repr(seed)}")
-        print(f"DEBUG BAGEL VALIDATION - image_ratio type: {type(image_ratio)}, value: {repr(image_ratio)}")
-        print(f"DEBUG BAGEL VALIDATION - cfg_text_scale type: {type(cfg_text_scale)}, value: {repr(cfg_text_scale)}")
-        print(f"DEBUG BAGEL VALIDATION - num_timesteps type: {type(num_timesteps)}, value: {repr(num_timesteps)}")
-        
-        # Validate prompt - be lenient during validation phase
-        actual_prompt = prompt
-        if actual_prompt is None: # Handle None input for prompt
-            actual_prompt = "" # Treat None as an empty string for validation
-
-        if isinstance(actual_prompt, (list, tuple)):
-            if len(actual_prompt) == 1 and isinstance(actual_prompt[0], str):
-                actual_prompt = actual_prompt[0]
-            elif len(actual_prompt) == 0: # Empty list/tuple
-                 # Allow empty during validation - will be filled by connected nodes
-                 actual_prompt = ""
-            else: # List/tuple with multiple elements or non-string elements
-                return "Prompt, if provided as a list/tuple, must contain exactly one string element."
-        
-        if not isinstance(actual_prompt, str):
-            return f"Prompt must be a string, but received type {type(actual_prompt).__name__}."
-        # Remove the empty prompt check during validation - allow empty prompts
-        # if not actual_prompt.strip():
-        #     return "Prompt cannot be empty or only whitespace."
-
-        # Validate other inputs
-        if not isinstance(seed, int) or seed < 0:
-            return "Seed must be a non-negative integer"
-
-        if image_ratio not in ["1:1", "4:3", "3:4", "16:9", "9:16"]:
-            return f"Invalid image_ratio: {image_ratio}"
-
-        if (
-            not isinstance(cfg_text_scale, (int, float))
-            or cfg_text_scale < 1.0
-            or cfg_text_scale > 8.0
-        ):
-            return "cfg_text_scale must be between 1.0 and 8.0"
-
-        if (
-            not isinstance(num_timesteps, int)
-            or num_timesteps < 10
-            or num_timesteps > 100
-        ):
-            return "num_timesteps must be between 10 and 100"
-
-        return True
-
     def generate_image(
         self,
         model: Dict[str, Any],
@@ -777,73 +722,6 @@ class BagelImageEdit:
     FUNCTION = "edit_image"
     CATEGORY = "BAGEL/Core"
 
-    @classmethod
-    def VALIDATE_INPUTS(
-        cls,
-        model,
-        image,
-        prompt,
-        seed,
-        cfg_text_scale,
-        cfg_img_scale,
-        num_timesteps,
-        **kwargs,
-    ):
-        """Validate input parameters"""
-        # DEBUG: Print what we received
-        print(f"DEBUG BAGEL EDIT VALIDATION - prompt type: {type(prompt)}, value: {repr(prompt)}")
-        print(f"DEBUG BAGEL EDIT VALIDATION - seed type: {type(seed)}, value: {repr(seed)}")
-        print(f"DEBUG BAGEL EDIT VALIDATION - cfg_text_scale type: {type(cfg_text_scale)}, value: {repr(cfg_text_scale)}")
-        print(f"DEBUG BAGEL EDIT VALIDATION - cfg_img_scale type: {type(cfg_img_scale)}, value: {repr(cfg_img_scale)}")
-        print(f"DEBUG BAGEL EDIT VALIDATION - num_timesteps type: {type(num_timesteps)}, value: {repr(num_timesteps)}")
-        
-        # Validate prompt - be lenient during validation phase
-        actual_prompt = prompt
-        if actual_prompt is None: # Handle None input for prompt
-            actual_prompt = "" # Treat None as an empty string for validation
-
-        if isinstance(actual_prompt, (list, tuple)):
-            if len(actual_prompt) == 1 and isinstance(actual_prompt[0], str):
-                actual_prompt = actual_prompt[0]
-            elif len(actual_prompt) == 0: # Empty list/tuple
-                 # Allow empty during validation - will be filled by connected nodes
-                 actual_prompt = ""
-            else: # List/tuple with multiple elements or non-string elements
-                return "Prompt, if provided as a list/tuple, must contain exactly one string element."
-        
-        if not isinstance(actual_prompt, str):
-            return f"Prompt must be a string, but received type {type(actual_prompt).__name__}."
-        # Remove the empty prompt check during validation - allow empty prompts
-        # if not actual_prompt.strip():
-        #     return "Prompt cannot be empty or only whitespace."
-
-        # Validate other inputs
-        if not isinstance(seed, int) or seed < 0:
-            return "Seed must be a non-negative integer"
-
-        if (
-            not isinstance(cfg_text_scale, (int, float))
-            or cfg_text_scale < 1.0
-            or cfg_text_scale > 8.0
-        ):
-            return "cfg_text_scale must be between 1.0 and 8.0"
-
-        if (
-            not isinstance(cfg_img_scale, (int, float))
-            or cfg_img_scale < 1.0
-            or cfg_img_scale > 4.0
-        ):
-            return "cfg_img_scale must be between 1.0 and 4.0"
-
-        if (
-            not isinstance(num_timesteps, int)
-            or num_timesteps < 10
-            or num_timesteps > 100
-        ):
-            return "num_timesteps must be between 10 and 100"
-
-        return True
-
     def edit_image(
         self,
         model: Dict[str, Any],
@@ -1014,46 +892,6 @@ class BagelImageUnderstanding:
     RETURN_NAMES = ("text",)
     FUNCTION = "understand_image"
     CATEGORY = "BAGEL/Core"
-
-    @classmethod
-    def VALIDATE_INPUTS(cls, model, image, prompt, **kwargs):
-        """Validate input parameters"""
-        # DEBUG: Print what we received
-        print(f"DEBUG BAGEL UNDERSTANDING VALIDATION - prompt type: {type(prompt)}, value: {repr(prompt)}")
-        print(f"DEBUG BAGEL UNDERSTANDING VALIDATION - kwargs: {kwargs}")
-        
-        # Validate prompt - be lenient during validation phase
-        actual_prompt = prompt
-        if actual_prompt is None: # Handle None input for prompt
-            actual_prompt = "" # Treat None as an empty string for validation
-
-        if isinstance(actual_prompt, (list, tuple)):
-            if len(actual_prompt) == 1 and isinstance(actual_prompt[0], str):
-                actual_prompt = actual_prompt[0]
-            elif len(actual_prompt) == 0: # Empty list/tuple
-                 # Allow empty during validation - will be filled by connected nodes
-                 actual_prompt = ""
-            else: # List/tuple with multiple elements or non-string elements
-                return "Prompt, if provided as a list/tuple, must contain exactly one string element."
-        
-        if not isinstance(actual_prompt, str):
-            return f"Prompt must be a string, but received type {type(actual_prompt).__name__}."
-        # Remove the empty prompt check during validation - allow empty prompts
-        # if not actual_prompt.strip():
-        #     return "Prompt cannot be empty or only whitespace."
-
-        # Validate optional parameters
-        if "text_temperature" in kwargs:
-            temp = kwargs["text_temperature"]
-            if not isinstance(temp, (int, float)) or temp < 0.0 or temp > 1.0:
-                return "text_temperature must be between 0.0 and 1.0"
-
-        if "max_new_tokens" in kwargs:
-            tokens = kwargs["max_new_tokens"]
-            if not isinstance(tokens, int) or tokens < 64 or tokens > 4096:
-                return "max_new_tokens must be between 64 and 4096"
-
-        return True
 
     def understand_image(
         self,
