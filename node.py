@@ -483,10 +483,13 @@ class BagelTextToImage:
         """Validate input parameters"""
         # Validate prompt
         actual_prompt = prompt
-        if isinstance(prompt, (list, tuple)):
-            if len(prompt) == 1 and isinstance(prompt[0], str):
-                actual_prompt = prompt[0]
-            elif len(prompt) == 0: # Empty list/tuple
+        if actual_prompt is None: # Handle None input for prompt
+            actual_prompt = "" # Treat None as an empty string for validation
+
+        if isinstance(actual_prompt, (list, tuple)):
+            if len(actual_prompt) == 1 and isinstance(actual_prompt[0], str):
+                actual_prompt = actual_prompt[0]
+            elif len(actual_prompt) == 0: # Empty list/tuple
                  return "Prompt, if provided as a list/tuple, must contain one string element, but it was empty."
             else: # List/tuple with multiple elements or non-string elements
                 return "Prompt, if provided as a list/tuple, must contain exactly one string element."
@@ -556,7 +559,10 @@ class BagelTextToImage:
         """
         _prompt_input = prompt
         actual_prompt: str
-        if isinstance(_prompt_input, (list, tuple)):
+
+        if _prompt_input is None: # Handle None input for prompt
+            actual_prompt = ""
+        elif isinstance(_prompt_input, (list, tuple)):
             if len(_prompt_input) == 1 and isinstance(_prompt_input[0], str):
                 actual_prompt = _prompt_input[0]
             else:
@@ -769,10 +775,13 @@ class BagelImageEdit:
         """Validate input parameters"""
         # Validate prompt
         actual_prompt = prompt
-        if isinstance(prompt, (list, tuple)):
-            if len(prompt) == 1 and isinstance(prompt[0], str):
-                actual_prompt = prompt[0]
-            elif len(prompt) == 0: # Empty list/tuple
+        if actual_prompt is None: # Handle None input for prompt
+            actual_prompt = "" # Treat None as an empty string for validation
+
+        if isinstance(actual_prompt, (list, tuple)):
+            if len(actual_prompt) == 1 and isinstance(actual_prompt[0], str):
+                actual_prompt = actual_prompt[0]
+            elif len(actual_prompt) == 0: # Empty list/tuple
                  return "Prompt, if provided as a list/tuple, must contain one string element, but it was empty."
             else: # List/tuple with multiple elements or non-string elements
                 return "Prompt, if provided as a list/tuple, must contain exactly one string element."
@@ -848,7 +857,10 @@ class BagelImageEdit:
         """
         _prompt_input = prompt
         actual_prompt: str
-        if isinstance(_prompt_input, (list, tuple)):
+
+        if _prompt_input is None: # Handle None input for prompt
+            actual_prompt = ""
+        elif isinstance(_prompt_input, (list, tuple)):
             if len(_prompt_input) == 1 and isinstance(_prompt_input[0], str):
                 actual_prompt = _prompt_input[0]
             else:
@@ -982,10 +994,13 @@ class BagelImageUnderstanding:
         """Validate input parameters"""
         # Validate prompt
         actual_prompt = prompt
-        if isinstance(prompt, (list, tuple)):
-            if len(prompt) == 1 and isinstance(prompt[0], str):
-                actual_prompt = prompt[0]
-            elif len(prompt) == 0: # Empty list/tuple
+        if actual_prompt is None: # Handle None input for prompt
+            actual_prompt = "" # Treat None as an empty string for validation
+
+        if isinstance(actual_prompt, (list, tuple)):
+            if len(actual_prompt) == 1 and isinstance(actual_prompt[0], str):
+                actual_prompt = actual_prompt[0]
+            elif len(actual_prompt) == 0: # Empty list/tuple
                  return "Prompt, if provided as a list/tuple, must contain one string element, but it was empty."
             else: # List/tuple with multiple elements or non-string elements
                 return "Prompt, if provided as a list/tuple, must contain exactly one string element."
@@ -1035,7 +1050,10 @@ class BagelImageUnderstanding:
         """
         _prompt_input = prompt
         actual_prompt: str
-        if isinstance(_prompt_input, (list, tuple)):
+
+        if _prompt_input is None: # Handle None input for prompt
+            actual_prompt = ""
+        elif isinstance(_prompt_input, (list, tuple)):
             if len(_prompt_input) == 1 and isinstance(_prompt_input[0], str):
                 actual_prompt = _prompt_input[0]
             else:
