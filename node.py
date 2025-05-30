@@ -600,13 +600,18 @@ class BagelTextToImage:
                 "image_shapes": image_shapes,
             }
 
-            # Prepare args for inferencer call, removing node-specific ones if any
-            inference_call_args = inference_hyper.copy()
-            inference_call_args["text"] = actual_prompt
-            inference_call_args["think"] = show_thinking
-            
-            # num_timesteps from input is a good proxy for total steps for progress bar
-            result = inferencer(text=actual_prompt, think=show_thinking, **inference_call_args)
+            # DEBUG: Print information before the inferencer call
+            print(f"DEBUG BagelTextToImage: actual_prompt type: {type(actual_prompt)}")
+            if isinstance(actual_prompt, str):
+                print(f"DEBUG BagelTextToImage: actual_prompt content (first 100 chars): '{actual_prompt[:100]}'")
+            else:
+                print(f"DEBUG BagelTextToImage: actual_prompt content: {actual_prompt}")
+            print(f"DEBUG BagelTextToImage: inference_hyper keys: {list(inference_hyper.keys())}")
+            if 'text' in inference_hyper:
+                print("ERROR DEBUG: 'text' key FOUND in inference_hyper!")
+
+            # Reverted to direct call
+            result = inferencer(text=actual_prompt, think=show_thinking, **inference_hyper)
 
             # Convert image format - potentially a list of images
             output_image_or_images = result["image"]
