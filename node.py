@@ -883,22 +883,19 @@ class BagelImageUnderstanding:
         _prompt_input = prompt
         actual_prompt: str
 
-        if _prompt_input is None: # Handle None input for prompt
-            actual_prompt = ""
+        if _prompt_input is None: actual_prompt = ""
         elif isinstance(_prompt_input, (list, tuple)):
-            if len(_prompt_input) == 1 and isinstance(_prompt_input[0], str):
-                actual_prompt = _prompt_input[0]
+            if len(_prompt_input) == 1 and isinstance(_prompt_input[0], str): actual_prompt = _prompt_input[0]
             else:
-                print(f"Error: Invalid prompt format in understand_image: {_prompt_input}. Expected string or list/tuple of one string.")
-                return (f"Error: Invalid prompt format during execution. Expected string, or list/tuple of one string.",)
-        elif isinstance(_prompt_input, str):
-            actual_prompt = _prompt_input
+                print(f"Error: Invalid prompt format in understand_image: {_prompt_input}.")
+                return (f"Error: Invalid prompt format during execution.",)
+        elif isinstance(_prompt_input, str): actual_prompt = _prompt_input
         else:
-            print(f"Error: Invalid prompt type in understand_image: {type(_prompt_input)}. Expected string or list/tuple of one string.")
-            return (f"Error: Invalid prompt type during execution. Expected string, or list/tuple of one string.",)
+            print(f"Error: Invalid prompt type in understand_image: {type(_prompt_input)}.")
+            return (f"Error: Invalid prompt type during execution.",)
 
         try:
-            set_seed(seed)
+            # Removed set_seed(seed) call as 'seed' is not a parameter here
             inferencer = model["inferencer"]
             pil_image = tensor_to_pil(image)
             pil_image = pil_img2rgb(pil_image)
@@ -915,11 +912,9 @@ class BagelImageUnderstanding:
                 print("ERROR DEBUG BagelImageUnderstanding: 'image' key FOUND in inference_hyper!")
             
             result = inferencer(image=pil_image, text=actual_prompt, think=show_thinking, understanding_output=True, **inference_hyper)
-
+            
             answer_text = result["text"]
-
             print(f"Image understanding completed, response length: {len(answer_text)}")
-
             return (answer_text,)
 
         except Exception as e:
