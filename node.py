@@ -530,26 +530,6 @@ class BagelTextToImage:
         cfg_renorm_type: str = "global",
         text_temperature: float = 0.3,
     ) -> Tuple[torch.Tensor, str]:
-        """
-        Generate image from text using BAGEL model
-
-        Args:
-            model: BAGEL model dictionary
-            prompt: Text prompt (can be str or list/tuple of one str)
-            seed: Random seed
-            image_ratio: Image aspect ratio
-            cfg_text_scale: CFG text scaling
-            num_timesteps: Denoising steps
-            show_thinking: Whether to display the reasoning process
-            cfg_interval: CFG interval start value
-            timestep_shift: Timestep offset
-            cfg_renorm_min: CFG re-normalization minimum value
-            cfg_renorm_type: CFG re-normalization type
-            text_temperature: Text generation temperature
-
-        Returns:
-            Generated image tensor and reasoning process text
-        """
         _prompt_input = prompt
         actual_prompt: str
 
@@ -570,13 +550,8 @@ class BagelTextToImage:
             return (empty_image, "Error: Invalid prompt type during execution.")
 
         try:
-            # Set random seed
             set_seed(seed)
-
-            # Get inferencer
             inferencer = model["inferencer"]
-
-            # Set image dimensions
             image_shapes_map = {
                 "1:1": (1024, 1024),
                 "4:3": (768, 1024),
@@ -585,34 +560,20 @@ class BagelTextToImage:
                 "9:16": (1024, 576),
             }
             image_shapes = image_shapes_map[image_ratio]
-
-            # Set inference hyperparameters
             inference_hyper = {
                 "max_think_token_n": 1024 if show_thinking else 1024,
                 "do_sample": False if not show_thinking else False,
                 "text_temperature": text_temperature if show_thinking else 0.3,
                 "cfg_text_scale": cfg_text_scale,
-                "cfg_interval": [cfg_interval, 1.0],  # End value fixed at 1.0
+                "cfg_interval": [cfg_interval, 1.0],
                 "timestep_shift": timestep_shift,
                 "num_timesteps": num_timesteps,
                 "cfg_renorm_min": cfg_renorm_min,
                 "cfg_renorm_type": cfg_renorm_type,
                 "image_shapes": image_shapes,
             }
-
-            # DEBUG: Print information before the inferencer call
-            print(f"DEBUG BagelTextToImage: actual_prompt type: {type(actual_prompt)}")
-            if isinstance(actual_prompt, str):
-                print(f"DEBUG BagelTextToImage: actual_prompt content (first 100 chars): '{actual_prompt[:100]}'")
-            else:
-                print(f"DEBUG BagelTextToImage: actual_prompt content: {actual_prompt}")
-            print(f"DEBUG BagelTextToImage: inference_hyper keys: {list(inference_hyper.keys())}")
-            if 'text' in inference_hyper:
-                print("ERROR DEBUG: 'text' key FOUND in inference_hyper!")
-
-            # Reverted to direct call
             result = inferencer(text=actual_prompt, think=show_thinking, **inference_hyper)
-
+            
             # Convert image format - potentially a list of images
             output_image_or_images = result["image"]
 
@@ -779,27 +740,6 @@ class BagelImageEdit:
         cfg_renorm_type: str = "text_channel",
         text_temperature: float = 0.3,
     ) -> Tuple[torch.Tensor, str]:
-        """
-        Edit image using BAGEL model
-
-        Args:
-            model: BAGEL model dictionary
-            image: Input image tensor
-            prompt: Editing prompt (can be str or list/tuple of one str)
-            seed: Random seed
-            cfg_text_scale: CFG text scaling
-            cfg_img_scale: CFG image scaling
-            num_timesteps: Denoising steps
-            show_thinking: Whether to display the reasoning process
-            cfg_interval: CFG interval start value
-            timestep_shift: Timestep offset
-            cfg_renorm_min: CFG re-normalization minimum value
-            cfg_renorm_type: CFG re-normalization type
-            text_temperature: Text generation temperature
-
-        Returns:
-            Edited image tensor and reasoning process text
-        """
         _prompt_input = prompt
         actual_prompt: str
 
@@ -818,36 +758,30 @@ class BagelImageEdit:
             return (image, "Error: Invalid prompt type during execution.") # Return original image on error
             
         try:
-            # Set random seed
             set_seed(seed)
-
-            # Get inferencer
             inferencer = model["inferencer"]
-
-            # Convert image format
             pil_image = tensor_to_pil(image)
             pil_image = pil_img2rgb(pil_image)
-
-            # Set inference hyperparameters
             inference_hyper = {
                 "max_think_token_n": 1024 if show_thinking else 1024,
                 "do_sample": False if not show_thinking else False,
                 "text_temperature": text_temperature if show_thinking else 0.3,
                 "cfg_text_scale": cfg_text_scale,
                 "cfg_img_scale": cfg_img_scale,
-                "cfg_interval": [cfg_interval, 1.0],  # End value fixed at 1.0
+                "cfg_interval": [cfg_interval, 1.0],
                 "timestep_shift": timestep_shift,
                 "num_timesteps": num_timesteps,
                 "cfg_renorm_min": cfg_renorm_min,
                 "cfg_renorm_type": cfg_renorm_type,
             }
 
-            inference_call_args = inference_hyper.copy()
-            inference_call_args["image"] = pil_image
-            inference_call_args["text"] = actual_prompt
-            inference_call_args["think"] = show_thinking
+            # DEBUG: Print information before the inferencer call
+            print(f"DEBUG BagelImageEdit: pil_image type: {type(pil_image)}")
+            print(f"DEBUG BagelImageEdit: inference_hyper keys: {list(inference_hyper.keys())}")
+            if 'image' in inference_hyper:
+                print("ERROR DEBUG BagelImageEdit: 'image' key FOUND in inference_hyper!")
 
-            result = inferencer(image=pil_image, text=actual_prompt, think=show_thinking, **inference_call_args)
+            result = inferencer(image=pil_image, text=actual_prompt, think=show_thinking, **inference_hyper)
             
             # Convert image format - potentially a list of images
             output_image_or_images = result["image"]
@@ -946,21 +880,6 @@ class BagelImageUnderstanding:
         text_temperature: float = 0.3,
         max_new_tokens: int = 512,
     ) -> Tuple[str]:
-        """
-        Use BAGEL model to understand image and answer questions
-
-        Args:
-            model: BAGEL model dictionary
-            image: Input image tensor
-            prompt: Question text (can be str or list/tuple of one str)
-            show_thinking: Whether to display the reasoning process
-            do_sample: Whether to enable sampling
-            text_temperature: Text generation temperature
-            max_new_tokens: Maximum new tokens
-
-        Returns:
-            Answer text
-        """
         _prompt_input = prompt
         actual_prompt: str
 
@@ -979,28 +898,23 @@ class BagelImageUnderstanding:
             return (f"Error: Invalid prompt type during execution. Expected string, or list/tuple of one string.",)
 
         try:
-            # Get inferencer
+            set_seed(seed)
             inferencer = model["inferencer"]
-
-            # Convert image format
             pil_image = tensor_to_pil(image)
             pil_image = pil_img2rgb(pil_image)
-
-            # Set inference hyperparameters
             inference_hyper = {
                 "do_sample": do_sample,
                 "text_temperature": text_temperature,
                 "max_think_token_n": max_new_tokens,
             }
 
-            inference_call_args = inference_hyper.copy()
-            inference_call_args["image"] = pil_image
-            inference_call_args["text"] = actual_prompt
-            inference_call_args["think"] = show_thinking
-            inference_call_args["understanding_output"] = True # This was specific to understand_image
-
-            # max_new_tokens can be a proxy for progress bar total steps
-            result = inferencer(image=pil_image, text=actual_prompt, think=show_thinking, understanding_output=True, **inference_call_args)
+            # DEBUG: Print information before the inferencer call
+            print(f"DEBUG BagelImageUnderstanding: pil_image type: {type(pil_image)}")
+            print(f"DEBUG BagelImageUnderstanding: inference_hyper keys: {list(inference_hyper.keys())}")
+            if 'image' in inference_hyper:
+                print("ERROR DEBUG BagelImageUnderstanding: 'image' key FOUND in inference_hyper!")
+            
+            result = inferencer(image=pil_image, text=actual_prompt, think=show_thinking, understanding_output=True, **inference_hyper)
 
             answer_text = result["text"]
 
